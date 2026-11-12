@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EGG RADAR - Steal An Egg</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#07110d;color:#eaffef;font-family:Arial,sans-serif}
+header{text-align:center;padding:25px}
+h1{color:#5cff9a;letter-spacing:5px}
+main{max-width:950px;margin:auto;padding:15px}
+.panel{background:#0c1b14;border:1px solid #1d4930;border-radius:15px;padding:18px;margin-bottom:15px}
+h2{color:#5cff9a}
+button,input,select{padding:11px;border-radius:8px;border:1px solid #315c40;background:#07130c;color:white;width:100%;margin:5px 0}
+button{background:#164b2b;cursor:pointer}
+.radar{width:270px;height:270px;margin:20px auto;border:2px solid #5cff9a;border-radius:50%;position:relative;background:repeating-radial-gradient(circle,#07110d 0 35px,#164b2b 36px 37px);overflow:hidden}
+.radar:before{content:"";position:absolute;inset:0;background:conic-gradient(transparent,#5cff9a66,transparent 70%);animation:spin 3s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.dot{position:absolute;width:9px;height:9px;background:#ffd66b;border-radius:50%;box-shadow:0 0 10px #ffd66b}
+.item{padding:12px;background:#10271a;margin:7px 0;border-radius:9px}
+a{color:#5cff9a}
+small{color:#9ab5a3}
+</style>
+</head>
+<body>
+<header>
+<h1>EGG RADAR</h1>
+<p>STEAL AN EGG · RADAR 1B - 1T</p>
+</header>
+<main>
+<div class="panel">
+<h2>RADAR</h2>
+<div class="radar" id="radar"></div>
+<p>Reportes guardados: <b id="count">0</b></p>
+</div>
+
+<div class="panel">
+<h2>BUSCAR SERVIDORES</h2>
+<button onclick="loadServers()">Cargar servidores públicos</button>
+<p id="status">Esperando...</p>
+<div id="servers"></div>
+<a href="https://www.roblox.com/games/107778070777162/" target="_blank">Abrir Steal An Egg</a>
+</div>
+
+<div class="panel">
+<h2>REPORTAR HUEVO</h2>
+<input id="egg" placeholder="Nombre del huevo">
+<input id="value" placeholder="Valor (1B - 1T)">
+<input id="server" placeholder="Servidor">
+<input id="location" placeholder="Ubicación observada">
+<button onclick="addReport()">Guardar reporte</button>
+<div id="reports"></div>
+</div>
+
+<div class="panel">
+<h2>FILTRO</h2>
+<select id="filter" onchange="render()">
+<option value="1">Desde 1B</option>
+<option value="10">Desde 10B</option>
+<option value="100">Desde 100B</option>
+<option value="1000">Desde 1T</option>
+</select>
+</div>
+</main>
+
+<script>
+const PLACE_ID="107778070777162";
+
+function parseValue(v){
+ const m=String(v).trim().toUpperCase().match(/^(\d+(?:\.\d+)?)\s*(B|T)$/);
+ if(!m)return 0;
+ return Number(m[1])*(m[2]==="T"?1000:1);
+}
+
+async function loadServers(){
+ document.getElementById("status").textContent="Consultando Roblox...";
+ try{
+  const url=`https://games.roblox.com/v1/games/${PLACE_ID}/servers/Public?limit=50&sortOrder=Asc`;
+  const res=await fetch(url);
+  if(!res.ok)throw Error("Error "+res.status);
+  const data=await res.json();
+  document.getElementById("status").textContent="Servidores encontrados: "+data.data.length;
+  document.getElementById("servers").innerHTML=data.data.map((s,i)=>`
+   <div class="item">
+    <b>Servidor ${i+1}</b><br>
+    <small>${s.playing}/${s.maxPlayers} jugadores</small><br>
+    <a href="https://www.roblox.com/games/${PLACE_ID}/?gameInstanceId=${encodeURIComponent(s.id)}" target="_blank">Entrar al servidor</a>
+   </div>`).join("");
+ }catch(e){
+  document.getElementById("status").textContent="No se pudo consultar Roblox. Puede ser CORS.";
+ }
+}
+
+function getReports(){
+ try{return JSON.parse(localStorage.getItem("eggReports")||"[]")}
+ catch{return []}
+}
+
+function addReport(){
+ const egg=document.getElementById("egg").value.trim();
+ const value=document.getElementById("value").value.trim();
+ if(!egg||parseValue(value)<1){
+  alert("Introduce un huevo y un valor válido como 1B o 1T");
+  return;
+ }
+ const reports=getReports();
+ reports.push({
+  egg,
+  value,
+  server:document.getElementById("server").value,
+  location:document.getElementById("location").value
+ });
+ localStorage.setItem("eggReports",JSON.stringify(reports));
+ render();
+}
+
+function render(){
+ const reports=getReports();
+ const min=Number(document.getElementById("filter").value);
+ const visible=reports.filter(r=>parseValue(r.value)>=min);
+ document.getElementById("count").textContent=reports.length;
+ document.getElementById("reports").innerHTML=visible.map(r=>`
+  <div class="item">
+   <b>${escapeHTML(r.egg)} - ${escapeHTML(r.value)}</b><br>
+   <small>${escapeHTML(r.server)} ${escapeHTML(r.location)}</small>
+  </div>`).join("")||"No hay reportes.";
+ const radar=document.getElementById("radar");
+ radar.querySelectorAll(".dot").forEach(d=>d.remove());
+ reports.slice(-15).forEach((r,i)=>{
+  const dot=document.createElement("span");
+  dot.className="dot";
+  dot.style.left=(20+(i*37)%65)+"%";
+  dot.style.top=(20+(i*23)%65)+"%";
+  radar.appendChild(dot);
+ });
+}
+
+function escapeHTML(s){
+ return String(s).replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
+render();
+</script>
+</body>
+</html>
