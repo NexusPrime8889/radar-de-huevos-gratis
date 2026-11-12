@@ -1,0 +1,312 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Egg Radar - Steal an Egg</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#102719;
+  color:#fff5d9;
+}
+header{
+  text-align:center;
+  padding:28px 15px;
+  background:linear-gradient(135deg,#245c35,#102719);
+  border-bottom:3px solid #a6d66b;
+}
+header h1{font-size:32px;margin:0;color:#d9ff9c}
+header p{color:#e5edcf}
+.controls{
+  max-width:1100px;
+  margin:20px auto;
+  padding:0 15px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+input,select{
+  padding:12px;
+  border-radius:10px;
+  border:2px solid #8bbd62;
+  background:#203d29;
+  color:white;
+  font-size:15px;
+}
+input{flex:1;min-width:180px}
+select{min-width:150px}
+.grid{
+  max-width:1200px;
+  margin:20px auto;
+  padding:0 15px 35px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:18px;
+}
+.card{
+  background:#1d3b27;
+  border:2px solid #648c45;
+  border-radius:17px;
+  padding:14px;
+  text-align:center;
+  box-shadow:0 5px 15px #0005;
+}
+.card img{
+  width:100%;
+  height:155px;
+  object-fit:contain;
+  background:#294b31;
+  border-radius:12px;
+}
+.photo-placeholder{
+  height:155px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#294b31;
+  border-radius:12px;
+  font-size:65px;
+}
+.card h2{
+  font-size:19px;
+  margin:13px 0 8px;
+  color:#e0ffad;
+}
+.info{
+  background:#142c1c;
+  padding:10px;
+  margin-top:8px;
+  border-radius:10px;
+  text-align:left;
+  font-size:14px;
+  line-height:1.8;
+}
+.info strong{color:#caff8d}
+.timer{color:#ffe38b;font-weight:bold}
+button{
+  width:100%;
+  padding:11px;
+  margin-top:12px;
+  border:0;
+  border-radius:10px;
+  background:#a4d65e;
+  color:#18301c;
+  font-weight:bold;
+  cursor:pointer;
+  font-size:14px;
+}
+button:hover{background:#c5f28a}
+.small{
+  color:#c5d8b8;
+  font-size:12px;
+  margin-top:8px;
+}
+footer{
+  text-align:center;
+  padding:25px;
+  color:#b9c9ad;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🥚 EGG RADAR</h1>
+  <p>Steal an Egg · Brainrot Animal Radar</p>
+</header>
+
+<div class="controls">
+  <input id="search" placeholder="🔎 Buscar brainrot..." oninput="render()">
+  <select id="rarity" onchange="render()">
+    <option value="">Todas las rarezas</option>
+    <option>Divine</option>
+    <option>Secret</option>
+    <option>Event</option>
+  </select>
+</div>
+
+<main class="grid" id="animals"></main>
+
+<footer>
+  Egg Radar · Los horarios se registran cuando pulsas el botón.
+</footer>
+
+<script>
+const animals = [
+  {
+    name:"Spirit World Guardian",
+    rarity:"Divine",
+    mutation:"Normal",
+    income:26000000000,
+    image:"https://static.wikia.nocookie.net/stealanegg/images/f/fe/Spirit_World_Guardian.webp/revision/latest/scale-to-width-down/300"
+  },
+  {
+    name:"Xenorath",
+    rarity:"Divine",
+    mutation:"Normal",
+    income:25000000000,
+    image:""
+  },
+  {
+    name:"Prismare",
+    rarity:"Divine",
+    mutation:"Normal",
+    income:20000000000,
+    image:""
+  },
+  {
+    name:"Sapphire Leviathan",
+    rarity:"Divine",
+    mutation:"Normal",
+    income:15000000000,
+    image:""
+  },
+  {
+    name:"Obsidian Rex",
+    rarity:"Divine",
+    mutation:"Normal",
+    income:12500000000,
+    image:""
+  },
+  {
+    name:"Voidseer Pumpkin",
+    rarity:"Divine",
+    mutation:"Normal",
+    income:12500000000,
+    image:"https://static.wikia.nocookie.net/stealanegg/images/8/8e/Voidseer_Pumpkin.webp/revision/latest/scale-to-width-down/300"
+  },
+  {
+    name:"Cursed Monarch",
+    rarity:"Divine",
+    mutation:"Normal",
+    income:12500000000,
+    image:""
+  },
+  {
+    name:"Skeletal Sabertooth",
+    rarity:"Divine",
+    mutation:"Normal",
+    income:9000000000,
+    image:"https://static.wikia.nocookie.net/stealanegg/images/6/63/Skeletal_Sabertooth.png/revision/latest/scale-to-width-down/300"
+  },
+  {
+    name:"Nebuloth Kraken",
+    rarity:"Divine",
+    mutation:"Normal",
+    income:8500000000,
+    image:""
+  },
+  {
+    name:"Royal Skywhale",
+    rarity:"Divine",
+    mutation:"Normal",
+    income:8000000000,
+    image:""
+  }
+];
+
+// Se conservan los registros en este navegador.
+let appearances = {};
+try {
+  appearances = JSON.parse(localStorage.getItem("eggRadarAppearances") || "{}");
+} catch(e) {
+  appearances = {};
+}
+
+function money(value){
+  if(value >= 1e12) return (value/1e12).toFixed(2).replace(/\.?0+$/,"")+"T/s";
+  if(value >= 1e9) return (value/1e9).toFixed(2).replace(/\.?0+$/,"")+"B/s";
+  if(value >= 1e6) return (value/1e6).toFixed(2).replace(/\.?0+$/,"")+"M/s";
+  return value.toLocaleString("en-US")+"/s";
+}
+
+function elapsed(timestamp){
+  if(!timestamp) return "Sin registrar";
+  let minutes = Math.max(0,Math.floor((Date.now()-timestamp)/60000));
+  if(minutes < 1) return "Hace menos de 1 minuto";
+  if(minutes < 60) return "Hace "+minutes+" minutos";
+  let hours = Math.floor(minutes/60);
+  let rest = minutes%60;
+  return "Hace "+hours+" h "+rest+" min";
+}
+
+function registerAppearance(name){
+  appearances[name] = Date.now();
+  localStorage.setItem("eggRadarAppearances",JSON.stringify(appearances));
+  render();
+}
+
+function clearAppearance(name){
+  delete appearances[name];
+  localStorage.setItem("eggRadarAppearances",JSON.stringify(appearances));
+  render();
+}
+
+function render(){
+  const search = document.getElementById("search").value.toLowerCase();
+  const rarity = document.getElementById("rarity").value;
+  const container = document.getElementById("animals");
+
+  const filtered = animals.filter(a =>
+    a.name.toLowerCase().includes(search) &&
+    (!rarity || a.rarity === rarity)
+  );
+
+  container.innerHTML = filtered.map(a => {
+    const timestamp = appearances[a.name];
+    const time = timestamp
+      ? new Date(timestamp).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})
+      : "Sin registrar";
+
+    const photo = a.image
+      ? `<img src="${a.image}" alt="${a.name}" onerror="this.outerHTML='<div class=&quot;photo-placeholder&quot;>🥚</div>'">`
+      : `<div class="photo-placeholder">🥚</div>`;
+
+    return `
+      <article class="card">
+        ${photo}
+        <h2>${a.name}</h2>
+
+        <div class="info">
+          <div>🏆 <strong>Rareza:</strong> ${a.rarity}</div>
+          <div>🧬 <strong>Mutación:</strong> ${a.mutation}</div>
+          <div>💰 <strong>Dinero:</strong> ${money(a.income)}</div>
+          <div>🕒 <strong>Apareció:</strong> ${time}</div>
+          <div>⏱️ <strong>Tiempo:</strong>
+            <span class="timer">${elapsed(timestamp)}</span>
+          </div>
+        </div>
+
+        <button onclick="registerAppearance('${a.name}')">
+          📍 Registrar aparición ahora
+        </button>
+
+        ${timestamp ? `
+          <button onclick="clearAppearance('${a.name}')">
+            ↩️ Borrar hora registrada
+          </button>
+        ` : ""}
+
+        <div class="small">Hora local de tu dispositivo</div>
+      </article>
+    `;
+  }).join("");
+
+  if(filtered.length === 0){
+    container.innerHTML = "<p>No se encontraron brainrots.</p>";
+  }
+}
+
+// Actualiza los minutos cada 10 segundos.
+render();
+setInterval(render,10000);
+</script>
+
+</body>
+</html>
