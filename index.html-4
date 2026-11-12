@@ -1,0 +1,198 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Egg Radar Live</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#102719;color:#fff5dc;font-family:Arial}
+header{text-align:center;padding:25px;background:#204d2d;border-bottom:3px solid #a6d66b}
+h1{color:#d9ff9c;margin:0}
+.status{color:#baff8b;margin-top:10px}
+.panel{max-width:900px;margin:20px auto;padding:15px;background:#1d3b27;border-radius:15px}
+input,select{width:100%;padding:12px;margin:6px 0;border:1px solid #83b957;border-radius:8px;background:#142c1c;color:white}
+button{padding:12px;border:0;border-radius:9px;background:#a6d66b;color:#17321c;font-weight:bold;cursor:pointer}
+.add{width:100%;margin-top:10px}
+.grid{max-width:1100px;margin:20px auto;padding:0 15px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:15px}
+.card{background:#1d3b27;border:2px solid #83b957;border-radius:15px;padding:13px}
+.card img{width:100%;height:160px;object-fit:contain;background:#294b31;border-radius:10px}
+.card h2{color:#d9ff9c;font-size:19px}
+.info{background:#142c1c;padding:10px;border-radius:9px;line-height:1.9;font-size:14px}
+.timer{color:#ffe38b;font-weight:bold}
+.remove{width:100%;margin-top:10px;background:#e59a79}
+.empty{text-align:center;color:#c5d8b8;padding:35px;grid-column:1/-1}
+</style>
+</head>
+<body>
+
+<header>
+<h1>🥚 EGG RADAR LIVE</h1>
+<div class="status">🟢 RADAR ACTIVO · STEAL AN EGG</div>
+</header>
+
+<section class="panel">
+<h3>📡 Registrar nueva aparición</h3>
+
+<select id="animal">
+<option value="">Selecciona un brainrot</option>
+</select>
+
+<select id="mutation">
+<option>Normal</option>
+<option>Golden</option>
+<option>Rainbow</option>
+<option>Diamond</option>
+<option>Galaxy</option>
+<option>Neon</option>
+</select>
+
+<input id="income" placeholder="Dinero por segundo (ej: 1000000)">
+<input id="player" placeholder="Nombre del jugador que robó el huevo">
+
+<button class="add" onclick="addAppearance()">📍 REGISTRAR APARICIÓN</button>
+</section>
+
+<h2 style="text-align:center">🔴 APARICIONES EN VIVO</h2>
+<div class="grid" id="radar">
+<div class="empty">Esperando la primera aparición...</div>
+</div>
+
+<script>
+const animals = [
+{
+name:"Spirit World Guardian",
+income:26000000000,
+image:"https://static.wikia.nocookie.net/stealanegg/images/f/fe/Spirit_World_Guardian.webp/revision/latest/scale-to-width-down/300"
+},
+{name:"Xenorath",income:25000000000,image:""},
+{name:"Prismare",income:20000000000,image:""},
+{name:"Sapphire Leviathan",income:15000000000,image:""},
+{name:"Obsidian Rex",income:12500000000,image:""},
+{
+name:"Voidseer Pumpkin",
+income:12500000000,
+image:"https://static.wikia.nocookie.net/stealanegg/images/8/8e/Voidseer_Pumpkin.webp/revision/latest/scale-to-width-down/300"
+},
+{name:"Cursed Monarch",income:12500000000,image:""},
+{
+name:"Skeletal Sabertooth",
+income:9000000000,
+image:"https://static.wikia.nocookie.net/stealanegg/images/6/63/Skeletal_Sabertooth.png/revision/latest/scale-to-width-down/300"
+},
+{name:"Nebuloth Kraken",income:8500000000,image:""},
+{name:"Royal Skywhale",income:8000000000,image:""}
+];
+
+let reports=[];
+try{
+ reports=JSON.parse(localStorage.getItem("eggLiveReports")||"[]");
+}catch(e){reports=[];}
+
+const animalSelect=document.getElementById("animal");
+animals.forEach((a,i)=>{
+ const option=document.createElement("option");
+ option.value=i;
+ option.textContent=a.name;
+ animalSelect.appendChild(option);
+});
+
+function money(n){
+ if(n>=1e12)return (n/1e12).toFixed(2)+"T/s";
+ if(n>=1e9)return (n/1e9).toFixed(2)+"B/s";
+ if(n>=1e6)return (n/1e6).toFixed(2)+"M/s";
+ return Number(n).toLocaleString("en-US")+"/s";
+}
+
+function addAppearance(){
+ const index=animalSelect.value;
+ if(index===""){
+  alert("Selecciona un brainrot");
+  return;
+ }
+
+ const animal=animals[Number(index)];
+ const mutation=document.getElementById("mutation").value;
+ const incomeInput=document.getElementById("income").value.trim();
+ const income=incomeInput===""?animal.income:Number(incomeInput);
+
+ if(!Number.isFinite(income)||income<0){
+  alert("Escribe una cantidad válida de dinero.");
+  return;
+ }
+
+ const player=document.getElementById("player").value.trim();
+
+ reports.unshift({
+  id:Date.now()+"-"+Math.random().toString(16).slice(2),
+  name:animal.name,
+  image:animal.image,
+  mutation:mutation,
+  income:income,
+  player:player||"No registrado",
+  time:Date.now()
+ });
+
+ save();
+ render();
+
+ animalSelect.value="";
+ document.getElementById("income").value="";
+ document.getElementById("player").value="";
+ document.getElementById("mutation").value="Normal";
+}
+
+function removeAppearance(id){
+ reports=reports.filter(r=>r.id!==id);
+ save();
+ render();
+}
+
+function save(){
+ localStorage.setItem("eggLiveReports",JSON.stringify(reports));
+}
+
+function render(){
+ const radar=document.getElementById("radar");
+
+ if(reports.length===0){
+  radar.innerHTML='<div class="empty">📡 Esperando la primera aparición...</div>';
+  return;
+ }
+
+ radar.innerHTML=reports.map(r=>{
+  const date=new Date(r.time);
+  const minutes=Math.floor((Date.now()-r.time)/60000);
+  const image=r.image
+   ? `<img src="${r.image}" alt="${r.name}" onerror="this.outerHTML='<div style=&quot;height:160px;display:grid;place-items:center;font-size:60px;background:#294b31&quot;>🥚</div>'">`
+   : `<div style="height:160px;display:grid;place-items:center;font-size:60px;background:#294b31">🥚</div>`;
+
+  return `
+   <article class="card">
+    ${image}
+    <h2>${r.name}</h2>
+    <div class="info">
+     🧬 <b>Mutación:</b> ${r.mutation}<br>
+     💰 <b>Dinero:</b> ${money(r.income)}<br>
+     🕒 <b>Apareció:</b> ${date.toLocaleTimeString()}<br>
+     ⏱️ <b>Hace:</b> <span class="timer">${minutes} minutos</span><br>
+     🥷 <b>Jugador que robó:</b> ${escapeHTML(r.player)}
+    </div>
+    <button class="remove" onclick="removeAppearance('${r.id}')">Eliminar aparición</button>
+   </article>
+  `;
+ }).join("");
+}
+
+function escapeHTML(value){
+ return String(value).replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
+render();
+setInterval(render,10000);
+</script>
+</body>
+</html>
