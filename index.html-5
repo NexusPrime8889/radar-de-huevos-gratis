@@ -1,0 +1,335 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Egg Radar Live</title>
+
+<!-- MONTSERRAT -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+/* CONFIGURACIÓN GENERAL */
+* {
+  box-sizing: border-box;
+  font-family: 'Montserrat', sans-serif !important;
+}
+
+body {
+  margin: 0;
+  background: #102719;
+  color: white;
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* UISTROKE ESTILO ROBLOX */
+h1, h2, h3, p, span, label, button, option {
+  -webkit-text-stroke: 0.5px #17251a;
+  text-shadow:
+    -1px -1px 0 #17251a,
+     1px -1px 0 #17251a,
+    -1px  1px 0 #17251a,
+     1px  1px 0 #17251a;
+}
+
+/* ENCABEZADO */
+header {
+  text-align: center;
+  padding: 30px 15px;
+  background: #204d2d;
+  border-bottom: 4px solid #a6d66b;
+}
+
+header h1 {
+  margin: 0;
+  color: #d9ff9c;
+  font-size: 35px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+header p {
+  font-weight: 700;
+}
+
+/* PANEL */
+.panel {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #1d3b27;
+  border: 2px solid #83b957;
+  border-radius: 15px;
+}
+
+input, select {
+  width: 100%;
+  padding: 13px;
+  margin: 7px 0;
+  border: 2px solid #83b957;
+  border-radius: 9px;
+  background: #142c1c;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+button {
+  padding: 13px;
+  border: 2px solid #17251a;
+  border-radius: 10px;
+  background: #a6d66b;
+  color: #17321c;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #c5f28a;
+}
+
+/* RADAR */
+.grid {
+  max-width: 1100px;
+  margin: 20px auto;
+  padding: 0 15px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(230px,1fr));
+  gap: 15px;
+}
+
+.card {
+  background: #1d3b27;
+  border: 3px solid #83b957;
+  border-radius: 15px;
+  padding: 13px;
+}
+
+.card img {
+  width: 100%;
+  height: 160px;
+  object-fit: contain;
+  background: #294b31;
+  border-radius: 10px;
+}
+
+.card h2 {
+  color: #d9ff9c;
+  font-size: 19px;
+  font-weight: 900;
+}
+
+.info {
+  background: #142c1c;
+  padding: 12px;
+  border-radius: 9px;
+  line-height: 2;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.timer {
+  color: #ffe38b;
+  font-weight: 900;
+}
+
+.remove {
+  width: 100%;
+  margin-top: 10px;
+  background: #e59a79;
+}
+
+.empty {
+  text-align: center;
+  color: #c5d8b8;
+  padding: 35px;
+  grid-column: 1/-1;
+}
+
+.add {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.status {
+  color: #baff8b;
+  font-weight: 900;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🥚 EGG RADAR LIVE</h1>
+  <p class="status">🟢 RADAR ACTIVO · STEAL AN EGG</p>
+</header>
+
+<section class="panel">
+  <h3>📡 Registrar aparición</h3>
+
+  <select id="animal">
+    <option value="">Selecciona un brainrot</option>
+    <option value="Spirit World Guardian">Spirit World Guardian</option>
+    <option value="Xenorath">Xenorath</option>
+    <option value="Prismare">Prismare</option>
+    <option value="Sapphire Leviathan">Sapphire Leviathan</option>
+    <option value="Obsidian Rex">Obsidian Rex</option>
+    <option value="Voidseer Pumpkin">Voidseer Pumpkin</option>
+    <option value="Cursed Monarch">Cursed Monarch</option>
+    <option value="Skeletal Sabertooth">Skeletal Sabertooth</option>
+    <option value="Nebuloth Kraken">Nebuloth Kraken</option>
+    <option value="Royal Skywhale">Royal Skywhale</option>
+  </select>
+
+  <select id="mutation">
+    <option>Normal</option>
+    <option>Golden</option>
+    <option>Rainbow</option>
+    <option>Diamond</option>
+    <option>Galaxy</option>
+    <option>Neon</option>
+  </select>
+
+  <input id="income" placeholder="Dinero por segundo">
+  <input id="player" placeholder="Nombre del jugador que robó">
+
+  <button class="add" onclick="addAppearance()">
+    📍 REGISTRAR APARICIÓN
+  </button>
+</section>
+
+<h2 style="text-align:center">🔴 APARICIONES EN VIVO</h2>
+
+<div class="grid" id="radar">
+  <div class="empty">📡 Esperando la primera aparición...</div>
+</div>
+
+<script>
+const animalData = {
+  "Spirit World Guardian":{
+    income:26000000000,
+    image:"https://static.wikia.nocookie.net/stealanegg/images/f/fe/Spirit_World_Guardian.webp/revision/latest/scale-to-width-down/300"
+  },
+  "Xenorath":{income:25000000000,image:""},
+  "Prismare":{income:20000000000,image:""},
+  "Sapphire Leviathan":{income:15000000000,image:""},
+  "Obsidian Rex":{income:12500000000,image:""},
+  "Voidseer Pumpkin":{
+    income:12500000000,
+    image:"https://static.wikia.nocookie.net/stealanegg/images/8/8e/Voidseer_Pumpkin.webp/revision/latest/scale-to-width-down/300"
+  },
+  "Cursed Monarch":{income:12500000000,image:""},
+  "Skeletal Sabertooth":{
+    income:9000000000,
+    image:"https://static.wikia.nocookie.net/stealanegg/images/6/63/Skeletal_Sabertooth.png/revision/latest/scale-to-width-down/300"
+  },
+  "Nebuloth Kraken":{income:8500000000,image:""},
+  "Royal Skywhale":{income:8000000000,image:""}
+};
+
+let reports = [];
+try {
+  reports = JSON.parse(localStorage.getItem("eggLiveReports") || "[]");
+} catch(e) {}
+
+function money(n) {
+  if(n >= 1e12) return (n/1e12).toFixed(2)+"T/s";
+  if(n >= 1e9) return (n/1e9).toFixed(2)+"B/s";
+  if(n >= 1e6) return (n/1e6).toFixed(2)+"M/s";
+  return Number(n).toLocaleString("en-US")+"/s";
+}
+
+function addAppearance() {
+  const name = document.getElementById("animal").value;
+  const mutation = document.getElementById("mutation").value;
+  const player = document.getElementById("player").value.trim();
+  const enteredIncome = document.getElementById("income").value.trim();
+
+  if(!name) {
+    alert("Selecciona un brainrot.");
+    return;
+  }
+
+  const data = animalData[name];
+  const income = enteredIncome === "" ? data.income : Number(enteredIncome);
+
+  if(!Number.isFinite(income) || income < 0) {
+    alert("Escribe un dinero válido.");
+    return;
+  }
+
+  reports.unshift({
+    id:Date.now()+"-"+Math.random(),
+    name,
+    mutation,
+    player:player || "No registrado",
+    income,
+    image:data.image,
+    time:Date.now()
+  });
+
+  localStorage.setItem("eggLiveReports",JSON.stringify(reports));
+  render();
+
+  document.getElementById("animal").value = "";
+  document.getElementById("income").value = "";
+  document.getElementById("player").value = "";
+}
+
+function removeAppearance(id) {
+  reports = reports.filter(r => r.id !== id);
+  localStorage.setItem("eggLiveReports",JSON.stringify(reports));
+  render();
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function render() {
+  const radar = document.getElementById("radar");
+
+  if(!reports.length) {
+    radar.innerHTML = '<div class="empty">📡 Esperando la primera aparición...</div>';
+    return;
+  }
+
+  radar.innerHTML = reports.map(r => {
+    const date = new Date(r.time);
+    const minutes = Math.floor((Date.now()-r.time)/60000);
+    const photo = r.image
+      ? `<img src="${r.image}" alt="${escapeHTML(r.name)}" onerror="this.outerHTML='<div class=&quot;empty&quot;>🥚 Foto no disponible</div>'">`
+      : `<div class="empty">🥚 Foto no disponible</div>`;
+
+    return `
+      <article class="card">
+        ${photo}
+        <h2>${escapeHTML(r.name)}</h2>
+        <div class="info">
+          🧬 Mutación: ${escapeHTML(r.mutation)}<br>
+          💰 Dinero: ${money(r.income)}<br>
+          🕒 Apareció: ${date.toLocaleTimeString()}<br>
+          ⏱️ Hace: <span class="timer">${minutes} minutos</span><br>
+          🥷 Jugador que robó: ${escapeHTML(r.player)}
+        </div>
+        <button class="remove" onclick="removeAppearance('${r.id}')">
+          ELIMINAR APARICIÓN
+        </button>
+      </article>
+    `;
+  }).join("");
+}
+
+render();
+setInterval(render,10000);
+</script>
+
+</body>
+</html>
