@@ -1,0 +1,296 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EGG RADAR | Steal An Egg</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:#dff3bd;
+ color:#304324;
+}
+header{
+ background:linear-gradient(#8bd75c,#55ad40);
+ padding:25px;
+ text-align:center;
+ color:white;
+ text-shadow:2px 3px #39772c;
+ border-bottom:5px solid #39772c;
+}
+header h1{font-size:42px;margin:0}
+header p{font-weight:bold}
+main{max-width:1100px;margin:auto;padding:15px}
+.panel{
+ background:#fff5d9;
+ border:4px solid #98602b;
+ border-radius:18px;
+ padding:16px;
+ margin-bottom:18px;
+ box-shadow:0 5px #75451e;
+}
+h2{color:#478b32}
+input,select{
+ width:100%;
+ padding:13px;
+ border:2px solid #a16b37;
+ border-radius:10px;
+ margin:5px 0;
+ font-size:15px;
+}
+.filters{
+ display:grid;
+ grid-template-columns:2fr 1fr;
+ gap:10px;
+}
+.cards{
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+ gap:14px;
+}
+.pet{
+ background:white;
+ border:3px solid #a16b37;
+ border-radius:15px;
+ text-align:center;
+ overflow:hidden;
+ box-shadow:0 4px #d1b17a;
+}
+.pet img{
+ width:100%;
+ height:155px;
+ object-fit:contain;
+ background:#d8f3bd;
+}
+.pet h3{margin:10px 5px}
+.money{
+ display:inline-block;
+ background:#ffdb55;
+ border:2px solid #b27b20;
+ border-radius:20px;
+ padding:7px 12px;
+ font-weight:bold;
+ margin:5px;
+}
+.rarity{color:#63854a;font-size:13px;margin:5px}
+.zone{font-size:12px;color:#777;margin-bottom:12px}
+a{color:#347e2d}
+.note{
+ background:#fff0b9;
+ padding:12px;
+ border-radius:10px;
+ font-size:13px;
+}
+button{
+ background:#70cb4b;
+ border:2px solid #39812e;
+ padding:12px;
+ border-radius:10px;
+ font-weight:bold;
+ cursor:pointer;
+}
+footer{text-align:center;padding:20px;font-size:12px}
+@media(max-width:600px){
+ .filters{grid-template-columns:1fr}
+ header h1{font-size:30px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>🥚 EGG RADAR 🥚</h1>
+<p>STEAL AN EGG · ANIMAL DATABASE</p>
+</header>
+
+<main>
+
+<section class="panel">
+<h2>🔎 BUSCADOR DE ANIMALES</h2>
+<div class="filters">
+<input id="search" placeholder="Buscar animal..." oninput="render()">
+<select id="rarity" onchange="render()">
+<option value="">Todas las rarezas</option>
+<option>Divine</option>
+<option>Eternal</option>
+<option>Secret</option>
+<option>Monster</option>
+<option>Event</option>
+</select>
+</div>
+<select id="minimum" onchange="render()">
+<option value="0">Todos los ingresos</option>
+<option value="1">Desde 1B/s</option>
+<option value="10">Desde 10B/s</option>
+<option value="100">Desde 100B/s</option>
+<option value="1000">Desde 1T/s</option>
+</select>
+<p id="total"></p>
+</section>
+
+<section class="panel">
+<h2>🐾 ANIMALES</h2>
+<div class="cards" id="cards"></div>
+</section>
+
+<section class="panel">
+<h2>📚 CATÁLOGO COMPLETO</h2>
+<p>Consulta el índice comunitario actualizado para ver el resto de animales, huevos, biomas e imágenes.</p>
+<a href="https://stealaneggindex.com/" target="_blank">
+Abrir catálogo completo de Steal An Egg ↗
+</a>
+</section>
+
+<section class="panel">
+<h2>ℹ️ INFORMACIÓN</h2>
+<div class="note">
+Las ganancias son valores base por segundo. El peso y las mutaciones pueden aumentar los ingresos. Los datos pueden cambiar con las actualizaciones del juego.
+</div>
+<br>
+<a href="https://www.roblox.com/games/107778070777162/" target="_blank">
+JUGAR STEAL AN EGG ↗
+</a>
+</section>
+
+</main>
+
+<footer>
+EGG RADAR · Fan project · No afiliado a Roblox
+</footer>
+
+<script>
+
+const animals = [
+
+{
+name:"Spirit World Guardian",
+income:26,
+rarity:"Divine",
+zone:"Secret Fusion",
+image:"https://static.wikia.nocookie.net/stealanegg/images/f/fe/Spirit_World_Guardian.webp/revision/latest/scale-to-width-down/72?cb=20261017112301"
+},
+
+{
+name:"Xenorath",
+income:25,
+rarity:"Divine",
+zone:"Alien Biome"
+},
+
+{
+name:"Prismare",
+income:20,
+rarity:"Divine",
+zone:"Alien Biome"
+},
+
+{
+name:"Sapphire Leviathan",
+income:15,
+rarity:"Divine",
+zone:"Alien Biome"
+},
+
+{
+name:"Obsidian Rex",
+income:12.5,
+rarity:"Divine",
+zone:"Alien Biome"
+},
+
+{
+name:"Voidseer Pumpkin",
+income:12.5,
+rarity:"Divine",
+zone:"Halloween Dimension",
+image:"https://static.wikia.nocookie.net/stealanegg/images/8/8e/Voidseer_Pumpkin.webp/revision/latest/scale-to-width-down/72?cb=20261022062705"
+},
+
+{
+name:"Cursed Monarch",
+income:12.5,
+rarity:"Divine",
+zone:"Unknown"
+},
+
+{
+name:"Skeletal Sabertooth",
+income:9,
+rarity:"Divine",
+zone:"Skeletal Egg",
+image:"https://static.wikia.nocookie.net/stealanegg/images/6/63/Skeletal_Sabertooth.png/revision/latest/scale-to-width-down/72?cb=20260927050416"
+},
+
+{
+name:"Nebuloth Kraken",
+income:8.5,
+rarity:"Divine",
+zone:"Alien Biome"
+},
+
+{
+name:"Royal Skywhale",
+income:8,
+rarity:"Divine",
+zone:"Enchanted Forest"
+}
+
+];
+
+function formatIncome(n){
+ if(n>=1000)return "$"+(n/1000)+"T/s";
+ return "$"+n+"B/s";
+}
+
+function render(){
+
+ const search=document.getElementById("search").value.toLowerCase();
+ const rarity=document.getElementById("rarity").value;
+ const minimum=Number(document.getElementById("minimum").value);
+
+ const filtered=animals.filter(a=>
+  a.name.toLowerCase().includes(search) &&
+  (!rarity||a.rarity===rarity) &&
+  a.income>=minimum
+ );
+
+ document.getElementById("total").textContent=
+ "Animales encontrados: "+filtered.length;
+
+ document.getElementById("cards").innerHTML=
+ filtered.map(a=>`
+
+ <article class="pet">
+
+ <img
+ src="${a.image||''}"
+ alt="${a.name}"
+ onerror="this.style.display='none'"
+ >
+
+ <h3>${a.name}</h3>
+
+ <div class="money">
+ ${formatIncome(a.income)}
+ </div>
+
+ <p class="rarity">${a.rarity}</p>
+ <p class="zone">${a.zone}</p>
+
+ </article>
+
+ `).join("") ||
+ "<p>No se encontraron animales.</p>";
+
+}
+
+render();
+
+</script>
+</body>
+</html>
